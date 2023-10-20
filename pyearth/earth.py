@@ -302,7 +302,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin, MultiOutputMixin):
                  allow_linear=None, use_fast=None, fast_K=None,
                  fast_h=None, smooth=None, enable_pruning=True,
                  feature_importance_type=None, verbose=0):
-
+        print("Here is an edit!")
         self.max_terms = max_terms
         self.max_degree = max_degree
         self.allow_missing = allow_missing
