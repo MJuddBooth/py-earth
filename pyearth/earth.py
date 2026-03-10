@@ -299,7 +299,12 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         'feature_importance_type',
         'verbose'
     ])
-    
+
+    def _more_tags(self):
+        """Declare multi-output support for sklearn estimator_checks (0.22+).
+        Replaces listing 'Earth' in MULTI_OUTPUT for sklearn < 0.22."""
+        return {'multioutput': True}
+
     def __init__(self, max_terms=None, max_degree=None, allow_missing=False,
                  penalty=None, endspan_alpha=None, endspan=None,
                  minspan_alpha=None, minspan=None,

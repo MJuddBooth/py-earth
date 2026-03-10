@@ -1,0 +1,16 @@
+# Build system and build-time dependencies (PEP 517).
+# For install/runtime deps see setup.py install_requires and extras_require.
+[build-system]
+requires = [
+    "setuptools==59.8.0",
+    "wheel",
+    "numpy>=1.15,<1.20; python_version<'3.12'",
+    "numpy>=1.15; python_version>='3.12'",
+    "Cython>=0.29.14,<0.30",
+]
+build-backend = "setuptools.build_meta"
+
+# Optional: pin exact versions for reproducible builds (e.g. in CI):
+#   setuptools==59.8.0
+#   numpy==1.19.5
+#   Cython==0.29.21

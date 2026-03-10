@@ -47,9 +47,14 @@ default_params = {"penalty": 1}
 @if_sklearn_version_greater_than_or_equal_to('0.17.2')
 def test_check_estimator():
     numpy.random.seed(0)
-    import sklearn.utils.estimator_checks
-    sklearn.utils.estimator_checks.MULTI_OUTPUT.append('Earth')
-    sklearn.utils.estimator_checks.check_estimator(Earth)
+    import sklearn.utils.estimator_checks as checks
+    # sklearn < 0.22: list Earth for multi-output checks via MULTI_OUTPUT
+    # sklearn >= 0.22: Earth declares multi-output via _more_tags() -> multioutput=True
+    try:
+        checks.MULTI_OUTPUT.append('Earth')
+    except AttributeError:
+        pass
+    checks.check_estimator(Earth)
 
 
 def test_get_params():

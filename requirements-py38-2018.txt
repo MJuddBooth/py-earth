@@ -1,0 +1,31 @@
+# Reproducible 2018-era test environment for Python 3.8
+# Install order matters: install this file so numpy/scipy are constrained first,
+# then install py-earth in the same venv.
+#
+# Create venv (Python 3.8 required):
+#   python3.8 -m venv .venv-py38 --without-pip
+# Bootstrap pip with the versioned get-pip for 3.8 (unversioned URL may drop 3.8 support):
+#   curl -sS https://bootstrap.pypa.io/3.8/get-pip.py -o get-pip-py38.py
+#   .venv-py38/bin/python get-pip-py38.py
+#
+# Install (from repo root):
+#   .venv-py38/bin/pip install -r requirements-py38-2018.txt
+#   .venv-py38/bin/pip install -e .
+#
+# Run tests:
+#   .venv-py38/bin/nosetests -sv pyearth
+
+# Core: keep numpy < 1.20 (py-earth uses np.int etc.)
+numpy>=1.15,<1.20
+scipy>=0.16,<1.4
+scikit-learn>=0.19,<0.23
+six
+
+# Test runner
+nose
+
+# Optional deps for full test suite (pandas 0.25.x = 2019, last pre-2.0 that supports Py3.8)
+pandas>=0.25,<0.26
+statsmodels>=0.11,<0.13
+patsy>=0.5
+sympy>=1.0,<1.6
