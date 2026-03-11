@@ -46,7 +46,7 @@ def export_sympy_term_expressions(earth_model):
       expressions are the symbolic equivalent of the Earth.transform method.
 
     """
-    from sympy import Symbol, Add, Mul, Max, RealNumber, Piecewise, Pow, And, nan, Function, Not
+    from sympy import Symbol, Add, Mul, Max, RealNumber, Piecewise, Pow, And, nan, Function
     from ._basis import LinearBasisFunction, HingeBasisFunction, SmoothedHingeBasisFunction, \
           MissingnessBasisFunction, ConstantBasisFunction, VariableBasisFunction
 
@@ -91,10 +91,9 @@ def export_sympy_term_expressions(earth_model):
         return factor
 
     def missingness_bf_to_factor(bf, bf_var):
-        # This is the error that should be raised when a user attempts to use functionality
-        # that has not yet been implemented.
+        # Missing(bf_var) is 0/1; for complement use 1 - Missing so we stay in Expr (SymPy 1.7+).
         if bf.complement:
-            return Not(Missing(bf_var))
+            return RealNumber(1) - Missing(bf_var)
         else:
             return Missing(bf_var)
 

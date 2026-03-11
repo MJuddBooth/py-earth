@@ -14,6 +14,7 @@ from pyearth.test.testing_utils import (if_statsmodels, if_pandas, if_patsy,
 from nose.tools import (assert_equal, assert_true, assert_almost_equal,
                         assert_list_equal, assert_raises, assert_not_equal)
 import numpy
+import sklearn
 from scipy.sparse import csr_matrix
 from pyearth._types import BOOL
 from pyearth._basis import (Basis, ConstantBasisFunction,
@@ -47,9 +48,12 @@ default_params = {"penalty": 1}
 @if_sklearn_version_greater_than_or_equal_to('0.17.2')
 def test_check_estimator():
     numpy.random.seed(0)
-    import sklearn.utils.estimator_checks
-    sklearn.utils.estimator_checks.MULTI_OUTPUT.append('Earth')
-    sklearn.utils.estimator_checks.check_estimator(Earth)
+    import sklearn.utils.estimator_checks as checks
+    if hasattr(checks, 'MULTI_OUTPUT'):
+        checks.MULTI_OUTPUT.append('Earth')
+    # sklearn 0.24+ requires an instance, not the class
+    estimator = Earth() if sklearn.__version__ >= '0.24' else Earth
+    sklearn.utils.estimator_checks.check_estimator(estimator)
 
 
 def test_get_params():

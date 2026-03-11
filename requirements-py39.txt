@@ -1,0 +1,23 @@
+# Python 3.9 test environment.
+# Uses numpy<1.20 so the checked-in .c extensions build without regenerating
+# from .pyx (newer scipy Cython API requires Cython 3). Same stack as py38.
+#
+# Create venv:
+#   python3.9 -m venv .venv-py39 --without-pip
+#   curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+#   .venv-py39/bin/python get-pip.py
+#
+# Install and run tests:
+#   .venv-py39/bin/pip install -r requirements-py39.txt
+#   .venv-py39/bin/pip install -e .
+#   .venv-py39/bin/nosetests -sv pyearth
+
+numpy>=1.15,<1.20
+scipy>=1.5,<1.8
+scikit-learn>=0.24,<1.0
+six
+nose
+pandas>=1.1,<1.2
+statsmodels>=0.11,<0.13
+patsy>=0.5
+sympy>=1.0,<1.6

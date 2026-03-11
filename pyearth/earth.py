@@ -330,6 +330,12 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         self.feature_importance_type = feature_importance_type
         self.verbose = verbose
 
+    def _more_tags(self):
+        # Earth supports multi-output regression (2D y, coef_ shape [basis, outputs]).
+        # Declaring multioutput=True so sklearn 0.24+ check_estimator does not
+        # require a DataConversionWarning when 2D y is passed.
+        return {'multioutput': True}
+
     def __eq__(self, other):
         if self.__class__ is not other.__class__:
             return False
@@ -618,6 +624,8 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         self.linvars_ = linvars
         X, y, sample_weight, output_weight, missing = self._scrub(
             X, y, sample_weight, output_weight, missing)
+
+        self.n_features_in_ = X.shape[1]
 
         # Do the actual work
         self.forward_pass(X, y,
@@ -1067,7 +1075,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
 
             coef, resid = lstsq(B, weighted_y[:, i], check_finite=False)[0:2]
             self.coef_.append(coef)
-            if not resid:
+            if resid is None or (hasattr(resid, 'size') and resid.size == 0):
                 resid = np.array(
                     [np.sum((np.dot(B, coef) - weighted_y[:, i]) ** 2)])
             resid_.append(resid)

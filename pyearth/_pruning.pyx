@@ -29,7 +29,7 @@ cdef class PruningPasser:
         self.sample_weight = sample_weight
         self.verbose = verbose
         self.basis = basis
-        self.B = np.empty(shape=(self.m, len(self.basis) + 1), dtype=np.float)
+        self.B = np.empty(shape=(self.m, len(self.basis) + 1), dtype=np.float64)
         self.penalty = kwargs.get('penalty', 3.0)
         if sample_weight.shape[1] == 1:
             y_avg = np.average(self.y, weights=sample_weight[:,0], axis=0)
@@ -97,9 +97,7 @@ cdef class PruningPasser:
             else:
                 self.basis.weighted_transform(X, missing, B, sample_weight[:, p])
             beta, mse_ = lstsq(B[:, 0:(basis_size)], weighted_y, check_finite=False)[0:2]
-            if mse_:
-                pass
-            else:
+            if mse_ is None or (getattr(mse_, 'size', 1) == 0):
                 mse_ = np.sum(
                     (np.dot(B[:, 0:basis_size], beta) - weighted_y) ** 2)
             mse += mse_
@@ -142,12 +140,9 @@ cdef class PruningPasser:
                         weighted_y = y[:,p] * np.sqrt(sample_weight[:,p])
                         self.basis.weighted_transform(X, missing, B, sample_weight[:, p])
                     beta, mse_ = lstsq(
-                        B[:, 0:pruned_basis_size], weighted_y, 
+                        B[:, 0:pruned_basis_size], weighted_y,
                         check_finite=False)[0:2]
-                    if mse_:
-                        pass
-#                         mse_ /= np.sum(self.sample_weight)
-                    else:
+                    if mse_ is None or (getattr(mse_, 'size', 1) == 0):
                         mse_ = np.sum((np.dot(B[:, 0:pruned_basis_size], beta) -
                                     weighted_y) ** 2) #/ np.sum(sample_weight)
                     mse += mse_# * output_weight[p]
