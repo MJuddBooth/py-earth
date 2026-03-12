@@ -1,6 +1,6 @@
 from cpython cimport bool
 cimport numpy as cnp
-from _types cimport FLOAT_t, INT_t, INDEX_t, BOOL_t
+from ._types cimport FLOAT_t, INT_t, INDEX_t, BOOL_t
 
 cdef class BasisFunction:
     '''Abstract.  Subclasses must implement the apply and __init__ methods.'''

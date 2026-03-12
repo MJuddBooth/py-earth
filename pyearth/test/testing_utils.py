@@ -1,9 +1,25 @@
 import os
-from functools import wraps
-from nose import SkipTest
-from nose.tools import assert_almost_equal
-from distutils.version import LooseVersion
 import sys
+from functools import wraps
+
+try:
+    from nose import SkipTest
+    from nose.tools import assert_almost_equal
+except ImportError:
+    SkipTest = __import__("unittest").SkipTest
+    assert_almost_equal = __import__("numpy").testing.assert_almost_equal
+
+try:
+    from distutils.version import LooseVersion
+except ImportError:
+    from packaging.version import Version as _Version
+    class LooseVersion:
+        def __init__(self, v):
+            self._v = _Version(str(v))
+        def __lt__(self, other):
+            return self._v < _Version(str(other))
+        def __ge__(self, other):
+            return self._v >= _Version(str(other))
 
 def if_environ_has(var_name):
     # Test decorator that skips test if environment variable is not defined

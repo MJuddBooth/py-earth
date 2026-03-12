@@ -21,15 +21,16 @@ def get_ext_modules():
         from Cython.Build import cythonize
         ext_modules = cythonize(
             [Extension(
-                "pyearth._util", ["pyearth/_util.pyx"], include_dirs=[numpy_inc]),
+                "pyearth._util", ["pyearth/_util.pyx"], include_dirs=[local_inc, numpy_inc]),
              Extension(
                  "pyearth._basis",
                  ["pyearth/_basis.pyx"],
-                 include_dirs=[numpy_inc]),
+                 include_dirs=[local_inc, numpy_inc],
+                 extra_compile_args=["-Wno-incompatible-pointer-types"]),
              Extension(
                  "pyearth._record",
                  ["pyearth/_record.pyx"],
-                 include_dirs=[numpy_inc]),
+                 include_dirs=[local_inc, numpy_inc]),
              Extension(
                  "pyearth._pruning",
                  ["pyearth/_pruning.pyx"],
@@ -130,13 +131,14 @@ def setup_package():
         'install_requires': [
             'scipy >= 0.16',
             'scikit-learn >= 0.16',
-            'six'
+            'six',
+            'versioneer >= 0.29',
             ],
         'extras_require': {'docs': ['sphinx_gallery'],
                            'dev': ['cython'],
                            'export': ['sympy'],
                            'all_tests': ['pandas', 'statsmodels', 'patsy', 'sympy']},
-        'setup_requires': ['numpy'],
+        'setup_requires': ['numpy', 'versioneer >= 0.29'],
         'include_package_data': True
     }
 

@@ -9,7 +9,7 @@ from libc.math cimport log
 from libc.math cimport abs
 cimport cython
 cdef FLOAT_t ZERO_TOL = 1e-16
-from _types import FLOAT
+from ._types import FLOAT
 import numpy as np
 import sys
 import six
@@ -571,11 +571,13 @@ cdef class MissingnessBasisFunction(VariableBasisFunction):
                   function.  Otherwise, recurse to compute parent function.
         '''
         if recurse:
-            self.parent.apply(X, missing, b, recurse=True)
+            # Python call to avoid Cython 3 cpdef inheritance/optional-arg ABI issue
+            getattr(self.parent, 'apply')(X, missing, b, True)
         if self.complement:
             b *= (1 - missing[:, self.variable])
         else:
             b *= missing[:, self.variable]
+        return None
 
     cpdef apply_deriv(MissingnessBasisFunction self,
                       cnp.ndarray[FLOAT_t, ndim=2] X,

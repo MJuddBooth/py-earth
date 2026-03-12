@@ -1,7 +1,7 @@
 cimport numpy as cnp
-from _types cimport FLOAT_t, INT_t, INDEX_t, BOOL_t
-from _basis cimport Basis
-from _record cimport PruningPassRecord
+from ._types cimport FLOAT_t, INT_t, INDEX_t, BOOL_t
+from ._basis cimport Basis
+from ._record cimport PruningPassRecord
 
 cdef class PruningPasser:
     cdef cnp.ndarray X
