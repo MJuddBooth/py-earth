@@ -5,7 +5,19 @@ from ._types import BOOL
 from sklearn.base import RegressorMixin, BaseEstimator, TransformerMixin
 from sklearn.utils.validation import (assert_all_finite, check_is_fitted,
                                       check_X_y, check_array)
+try:
+    from sklearn.utils.validation import validate_data
+except ImportError:
+    validate_data = None
+import inspect
 import numpy as np
+
+# sklearn 1.6+ renamed force_all_finite -> ensure_all_finite
+_CHECK_FINITE_KW = (
+    {"ensure_all_finite": False}
+    if "ensure_all_finite" in inspect.signature(check_array).parameters
+    else {"force_all_finite": False}
+)
 from scipy import sparse
 from scipy.linalg import lstsq
 from ._version import get_versions
@@ -16,7 +28,7 @@ except ImportError:
 
 __version__ = get_versions()['version']
 
-class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
+class Earth(RegressorMixin, TransformerMixin, BaseEstimator):
 
     """
     Multivariate Adaptive Regression Splines
@@ -336,6 +348,12 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         # require a DataConversionWarning when 2D y is passed.
         return {'multioutput': True}
 
+    def __sklearn_tags__(self):
+        # sklearn 1.6+ requires __sklearn_tags__ when _more_tags is defined.
+        tags = super().__sklearn_tags__()
+        tags.target_tags.multi_output = True
+        return tags
+
     def __eq__(self, other):
         if self.__class__ is not other.__class__:
             return False
@@ -401,6 +419,20 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
                     labels = ['x%d' % i for i in range(X.shape[1])]
         return labels
 
+    def _validate_n_features_in(self, X):
+        """Validate X has n_features_in_ from fit (for sklearn check_estimator)."""
+        n_features = getattr(self, 'n_features_in_', None)
+        if n_features is None:
+            return
+        if validate_data is not None:
+            validate_data(self, X, reset=False)
+            return
+        X_check = check_array(X, ensure_2d=True, **_CHECK_FINITE_KW)
+        if X_check.shape[1] != n_features:
+            raise ValueError(
+                "X has %d features, but %s is expecting %d features as input."
+                % (X_check.shape[1], self.__class__.__name__, n_features))
+
     def _scrub_x(self, X, missing, **kwargs):
         '''
         Sanitize input predictors and extract column names if appropriate.
@@ -410,7 +442,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
             raise TypeError('A sparse matrix was passed, but dense data '
                             'is required. Use X.toarray() to convert to '
                             'dense.')
-        check_array(X, ensure_2d=True, force_all_finite=False)
+        check_array(X, ensure_2d=True, **_CHECK_FINITE_KW)
         X = np.asarray(X, dtype=np.float64, order='F')
         
         # Figure out missingness
@@ -522,8 +554,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
             check_array(output_weight, ensure_2d=False)
 
         # Make sure everything is consistent
-        check_X_y(X, y, accept_sparse=False, multi_output=True,
-                  force_all_finite=False)
+        check_X_y(X, y, accept_sparse=False, multi_output=True, **_CHECK_FINITE_KW)
 
         return X, y, sample_weight, None, missing
 
@@ -1149,6 +1180,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
                 The predicted values.
         '''
         if not skip_scrub:
+            self._validate_n_features_in(X)
             X, missing = self._scrub_x(X, missing)
         B = self.transform(X, missing)
         y = np.dot(B, self.coef_.T)
@@ -1275,6 +1307,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         '''
         check_is_fitted(self, "basis_")
         if not skip_scrub:
+            self._validate_n_features_in(X)
             X, y, sample_weight, output_weight, missing = self._scrub(
                 X, y, sample_weight, output_weight, missing)
         if sample_weight.shape[1] == 1 and y.shape[1] > 1:
@@ -1383,6 +1416,7 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
         '''
 
         check_is_fitted(self, "basis_")
+        self._validate_n_features_in(X)
         X, missing = self._scrub_x(X, missing)
         B = np.empty(shape=(X.shape[0], self.basis_.plen()), order='F')
         self.basis_.transform(X, missing, B)

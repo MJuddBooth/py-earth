@@ -1,11 +1,75 @@
-# Build system and build-time dependencies (PEP 517).
-# For install/runtime deps see setup.py install_requires and extras_require.
 [build-system]
 requires = [
-    "setuptools==59.8.0",
+    "setuptools>=61",
     "wheel",
     "numpy>=1.15,<1.20; python_version<'3.12'",
-    "numpy>=1.15; python_version>='3.12'",
-    "Cython==0.29.21",
+    "numpy>=1.15; python_version>='3.12' and python_version<'3.13'",
+    "numpy>=2.0; python_version>='3.13'",
+    "Cython>=0.29.21,<0.30; python_version<'3.13'",
+    "Cython>=3.0; python_version>='3.13'",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "sklearn-contrib-py-earth"
+description = "A Python implementation of Jerome Friedman's Multivariate Adaptive Regression Splines."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.6"
+dynamic = ["version"]
+authors = [
+    { name = "Jason Rudy", email = "jcrudy@gmail.com" },
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Development Status :: 3 - Alpha",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Cython",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development",
+]
+dependencies = [
+    "scipy>=0.16",
+    "scikit-learn>=0.16",
+    "six",
+    "versioneer>=0.29",
+]
+# For Python 3.13 + NumPy 2, use: pip install -r requirements-py313.txt then pip install -e .
+
+[project.optional-dependencies]
+docs = ["sphinx_gallery"]
+dev = ["cython"]
+export = ["sympy"]
+all_tests = ["pandas", "statsmodels", "patsy", "sympy"]
+
+[project.urls]
+Download = "https://github.com/scikit-learn-contrib/py-earth/archive/0.1.tar.gz"
+
+[tool.setuptools]
+packages = { find = {} }
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "versioneer.get_version" }
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "pyearth/_version.py"
+versionfile_build = "pyearth/_version.py"
+tag_prefix = ""
+parentdir_prefix = "py-earth"
