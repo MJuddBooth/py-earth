@@ -69,6 +69,8 @@ cdef class ForwardPasser:
         # so the objective function is (sqrt(W) * residual) ^ 2)
         self.sample_weight = np.sqrt(sample_weight)
         self.m = self.X.shape[0]
+        # Effective sample size for GCV (sum of weights); equals m when weights are 1
+        self.effective_m = np.sum(self.sample_weight ** 2)
         self.n = self.X.shape[1]
         self.endspan       = kwargs.get('endspan', -1)
         self.minspan       = kwargs.get('minspan', -1)
@@ -270,14 +272,15 @@ cdef class ForwardPasser:
         cdef INDEX_t endspan
         cdef bint linear_dependence
         cdef bint dependent
-        # TODO: Shouldn't there be weights here?
-        cdef FLOAT_t gcv_factor_k_plus_1 = gcv_adjust(k + 1, self.m,
+        # Use effective sample size (sum of weights) in GCV so weighted fit
+        # matches replication-equivalent unweighted fit (sklearn check_estimator).
+        cdef FLOAT_t gcv_factor_k_plus_1 = gcv_adjust(k + 1, self.effective_m,
                                                       self.penalty)
-        cdef FLOAT_t gcv_factor_k_plus_2 = gcv_adjust(k + 2, self.m,
+        cdef FLOAT_t gcv_factor_k_plus_2 = gcv_adjust(k + 2, self.effective_m,
                                                       self.penalty)
-        cdef FLOAT_t gcv_factor_k_plus_3 = gcv_adjust(k + 3, self.m,
+        cdef FLOAT_t gcv_factor_k_plus_3 = gcv_adjust(k + 3, self.effective_m,
                                                       self.penalty)
-        cdef FLOAT_t gcv_factor_k_plus_4 = gcv_adjust(k + 4, self.m,
+        cdef FLOAT_t gcv_factor_k_plus_4 = gcv_adjust(k + 4, self.effective_m,
                                                       self.penalty)
         cdef FLOAT_t gcv_
         cdef FLOAT_t mse_
