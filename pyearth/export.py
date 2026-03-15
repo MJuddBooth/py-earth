@@ -31,7 +31,9 @@ def export_python_string(earth_model, function_name="model"):
             accessors.append(bf.func_string_factory(earth_model.coef_[0, i]))
             i += 1
 
-    return """def {:s}(example_iterator):
+    return """import numpy as np
+
+def {:s}(example_iterator):
     accessors = [{:s}]
     for x in example_iterator:
         yield sum(accessor(x) for accessor in accessors)

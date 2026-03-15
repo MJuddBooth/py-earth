@@ -425,7 +425,12 @@ class Earth(RegressorMixin, TransformerMixin, BaseEstimator):
         if n_features is None:
             return
         if validate_data is not None:
-            validate_data(self, X, reset=False)
+            check_params = dict(**_CHECK_FINITE_KW)
+            if getattr(self, 'allow_missing', False):
+                # Allow NaN so _scrub can build missing mask; Earth handles missing internally.
+                key = 'ensure_all_finite' if 'ensure_all_finite' in inspect.signature(check_array).parameters else 'force_all_finite'
+                check_params[key] = False
+            validate_data(self, X, reset=False, **check_params)
             return
         X_check = check_array(X, ensure_2d=True, **_CHECK_FINITE_KW)
         if X_check.shape[1] != n_features:

@@ -10,16 +10,9 @@ except ImportError:
     assert_almost_equal = __import__("numpy").testing.assert_almost_equal
 
 try:
-    from distutils.version import LooseVersion
+    from packaging.version import Version
 except ImportError:
-    from packaging.version import Version as _Version
-    class LooseVersion:
-        def __init__(self, v):
-            self._v = _Version(str(v))
-        def __lt__(self, other):
-            return self._v < _Version(str(other))
-        def __ge__(self, other):
-            return self._v >= _Version(str(other))
+    Version = None  # type: ignore[misc, assignment]
 
 def if_environ_has(var_name):
     # Test decorator that skips test if environment variable is not defined
@@ -52,7 +45,9 @@ def if_sklearn_version_greater_than_or_equal_to(min_version):
         @wraps(func)
         def run_test(*args, **kwargs):
             import sklearn
-            if LooseVersion(sklearn.__version__) < LooseVersion(min_version):
+            if Version is None:
+                raise SkipTest('packaging.version not available')
+            if Version(sklearn.__version__) < Version(min_version):
                 raise SkipTest('sklearn version less than %s' %
                                str(min_version))
             else:

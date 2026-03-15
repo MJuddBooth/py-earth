@@ -1,12 +1,13 @@
 [build-system]
 requires = [
-    "setuptools>=61",
+    "setuptools>=77.0.3",
     "wheel",
     "numpy>=1.15,<1.20; python_version<'3.12'",
     "numpy>=1.15; python_version>='3.12' and python_version<'3.13'",
     "numpy>=2.0; python_version>='3.13'",
     "Cython>=0.29.21,<0.30; python_version<'3.13'",
-    "Cython>=3.0; python_version>='3.13'",
+    "Cython>=3.0; python_version>='3.13'", 
+    "versioneer>=0.29",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -14,8 +15,8 @@ build-backend = "setuptools.build_meta"
 name = "sklearn-contrib-py-earth"
 description = "A Python implementation of Jerome Friedman's Multivariate Adaptive Regression Splines."
 readme = "README.md"
-license = "BSD-3-Clause"
-license-files = ["LICENSE.txt"]
+license = {text = "BSD-3-Clause"}
+# license-file = {file = "LICENSE.txt"}
 requires-python = ">=3.6"
 dynamic = ["version"]
 authors = [
