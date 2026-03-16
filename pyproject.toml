@@ -64,6 +64,20 @@ Download = "https://github.com/scikit-learn-contrib/py-earth/archive/0.1.tar.gz"
 packages = { find = {} }
 include-package-data = true
 
+# Cython extension list (same shape as [tool.setuptools] ext-modules).
+# setup.py reads this, adds numpy include dir, and builds from .pyx via Cython.
+[tool.pyearth]
+ext-modules = [
+  { name = "pyearth._util", sources = ["pyearth/_util.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._basis", sources = ["pyearth/_basis.pyx"], include-dirs = ["pyearth"], extra-compile-args = ["-Wno-incompatible-pointer-types"] },
+  { name = "pyearth._record", sources = ["pyearth/_record.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._pruning", sources = ["pyearth/_pruning.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._forward", sources = ["pyearth/_forward.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._knot_search", sources = ["pyearth/_knot_search.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._qr", sources = ["pyearth/_qr.pyx"], include-dirs = ["pyearth"] },
+  { name = "pyearth._types", sources = ["pyearth/_types.pyx"], include-dirs = ["pyearth"] },
+]
+
 [tool.setuptools.dynamic]
 version = { attr = "versioneer.get_version" }
 

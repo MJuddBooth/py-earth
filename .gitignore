@@ -1,3 +1,4 @@
+*~
 *.exp
 *.lib
 *.o
@@ -23,3 +24,5 @@ examples/classifier_comp.pdf
 examples/comparison.csv
 scripts/comparison.csv
 py_earth.egg-info
+# Cython-generated (build from .pyx at build time; do not commit)
+pyearth/*.c

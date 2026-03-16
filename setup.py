@@ -1,70 +1,76 @@
 """
 Minimal setup.py for Cython extensions and versioneer cmdclass.
-All package metadata lives in pyproject.toml.
+Extension list is defined in pyproject.toml [tool.pyearth] ext-modules;
+this script reads it, adds numpy include dir, and builds from .pyx via Cython.
 """
 from setuptools import setup, Extension
-import sys
 import versioneer
 
-# Build from .pyx when --cythonize is passed, else from pre-generated .c
-if "--cythonize" in sys.argv:
-    cythonize_switch = True
-    sys.argv.remove("--cythonize")
-else:
-    cythonize_switch = False
+
+def _load_pyproject_ext_modules():
+    """Read [tool.pyearth] ext-modules from pyproject.toml."""
+    try:
+        import tomllib
+    except ImportError:
+        try:
+            import tomli as tomllib
+        except ImportError:
+            return None
+    from pathlib import Path
+    with open(Path(__file__).resolve().parent / "pyproject.toml", "rb") as f:
+        config = tomllib.load(f)
+    return config.get("tool", {}).get("pyearth", {}).get("ext-modules")
+
+
+def _pyproject_entry_to_extension(entry):
+    """Convert one pyproject ext-modules entry to (name, sources, include_dirs, extra_compile_args)."""
+    name = entry["name"]
+    sources = list(entry["sources"])
+    include_dirs = list(entry.get("include-dirs", []))
+    extra_compile_args = list(entry.get("extra-compile-args", []))
+    return name, sources, include_dirs, extra_compile_args
 
 
 def get_ext_modules():
     import numpy
-    local_inc = "pyearth"
+    from Cython.Build import cythonize
     numpy_inc = numpy.get_include()
+    local_inc = "pyearth"
 
-    if cythonize_switch:
-        from Cython.Build import cythonize
-        return cythonize(
-            [
-                Extension("pyearth._util", ["pyearth/_util.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension(
-                    "pyearth._basis",
-                    ["pyearth/_basis.pyx"],
-                    include_dirs=[local_inc, numpy_inc],
-                    extra_compile_args=["-Wno-incompatible-pointer-types"],
-                ),
-                Extension("pyearth._record", ["pyearth/_record.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension("pyearth._pruning", ["pyearth/_pruning.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension("pyearth._forward", ["pyearth/_forward.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension("pyearth._knot_search", ["pyearth/_knot_search.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension("pyearth._qr", ["pyearth/_qr.pyx"], include_dirs=[local_inc, numpy_inc]),
-                Extension("pyearth._types", ["pyearth/_types.pyx"], include_dirs=[local_inc, numpy_inc]),
-            ]
-        )
-    else:
-        return [
-            Extension("pyearth._util", ["pyearth/_util.c"], include_dirs=[numpy_inc]),
-            Extension("pyearth._basis", ["pyearth/_basis.c"], include_dirs=[numpy_inc]),
-            Extension("pyearth._record", ["pyearth/_record.c"], include_dirs=[numpy_inc]),
-            Extension("pyearth._pruning", ["pyearth/_pruning.c"], include_dirs=[local_inc, numpy_inc]),
-            Extension("pyearth._forward", ["pyearth/_forward.c"], include_dirs=[local_inc, numpy_inc]),
-            Extension("pyearth._knot_search", ["pyearth/_knot_search.c"], include_dirs=[local_inc, numpy_inc]),
-            Extension("pyearth._qr", ["pyearth/_qr.c"], include_dirs=[local_inc, numpy_inc]),
-            Extension("pyearth._types", ["pyearth/_types.c"], include_dirs=[local_inc, numpy_inc]),
+    entries = _load_pyproject_ext_modules()
+    if entries is None:
+        # Fallback when tomllib/tomli not available (e.g. old Python)
+        entries = [
+            {"name": "pyearth._util", "sources": ["pyearth/_util.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._basis", "sources": ["pyearth/_basis.pyx"], "include-dirs": [local_inc], "extra-compile-args": ["-Wno-incompatible-pointer-types"]},
+            {"name": "pyearth._record", "sources": ["pyearth/_record.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._pruning", "sources": ["pyearth/_pruning.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._forward", "sources": ["pyearth/_forward.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._knot_search", "sources": ["pyearth/_knot_search.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._qr", "sources": ["pyearth/_qr.pyx"], "include-dirs": [local_inc]},
+            {"name": "pyearth._types", "sources": ["pyearth/_types.pyx"], "include-dirs": [local_inc]},
         ]
+
+    ext_list = []
+    for entry in entries:
+        name, sources, include_dirs, extra_compile_args = _pyproject_entry_to_extension(entry)
+        include_dirs = include_dirs + [numpy_inc]
+        ext_list.append(
+            Extension(name, sources, include_dirs=include_dirs, extra_compile_args=extra_compile_args or None)
+        )
+
+    return cythonize(ext_list)
 
 
 def is_special_command():
+    import sys
     special = ("--help-commands", "egg_info", "--version", "clean")
     return "--help" in sys.argv[1:] or (len(sys.argv) >= 2 and sys.argv[1] in special)
 
 
 if __name__ == "__main__":
-    kwargs = {}
+    from Cython.Distutils import build_ext
+    kwargs = {"cmdclass": versioneer.get_cmdclass({"build_ext": build_ext})}
     if not is_special_command():
         kwargs["ext_modules"] = get_ext_modules()
-
-    if cythonize_switch:
-        from Cython.Distutils import build_ext
-        kwargs["cmdclass"] = versioneer.get_cmdclass({"build_ext": build_ext})
-    else:
-        kwargs["cmdclass"] = versioneer.get_cmdclass()
-
     setup(**kwargs)
