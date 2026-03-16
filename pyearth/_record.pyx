@@ -49,7 +49,8 @@ cdef class Record:
     cpdef FLOAT_t gcv(Record self, INDEX_t iteration):
         cdef Iteration it = self.iterations[iteration]
         cdef FLOAT_t mse = it.mse
-        return gcv(mse, it.get_size(), self.num_samples, self.penalty)
+        cdef FLOAT_t data_size = self.effective_num_samples if self.effective_num_samples > 0 else <FLOAT_t>self.num_samples
+        return gcv(mse, it.get_size(), data_size, self.penalty)
 
     cpdef FLOAT_t rsq(Record self, INDEX_t iteration):
         # gcv(self.sst,1,self.num_samples,self.penalty)
@@ -60,15 +61,18 @@ cdef class Record:
         return 1 - (mse / mse0)
 
     cpdef FLOAT_t grsq(Record self, INDEX_t iteration):
-        cdef FLOAT_t gcv0 = gcv(self.sst, 1, self.num_samples, self.penalty)
+        cdef FLOAT_t data_size = self.effective_num_samples if self.effective_num_samples > 0 else <FLOAT_t>self.num_samples
+        cdef FLOAT_t gcv0 = gcv(self.sst, 1, data_size, self.penalty)
         cdef FLOAT_t gcv_ = self.gcv(iteration)
         return 1 - (gcv_ / gcv0)
 
 cdef class PruningPassRecord(Record):
     def __init__(PruningPassRecord self, INDEX_t num_samples,
                  INDEX_t num_variables, FLOAT_t penalty,
-                 FLOAT_t sst, INDEX_t size, FLOAT_t mse):
+                 FLOAT_t sst, INDEX_t size, FLOAT_t mse,
+                 FLOAT_t effective_num_samples=0):
         self.num_samples = num_samples
+        self.effective_num_samples = effective_num_samples
         self.num_variables = num_variables
         self.penalty = penalty
         self.sst = sst
@@ -79,6 +83,7 @@ cdef class PruningPassRecord(Record):
 
     def _getstate(PruningPassRecord self):
         result = {'num_samples': self.num_samples,
+                  'effective_num_samples': self.effective_num_samples,
                   'num_variables': self.num_variables,
                   'penalty': self.penalty,
                   'sst': self.sst,
@@ -88,6 +93,7 @@ cdef class PruningPassRecord(Record):
 
     def __setstate__(PruningPassRecord self, dict state):
         self.num_samples = state['num_samples']
+        self.effective_num_samples = state.get('effective_num_samples', 0)
         self.num_variables = state['num_variables']
         self.penalty = state['penalty']
         self.sst = state['sst']
@@ -130,8 +136,9 @@ cdef class ForwardPassRecord(Record):
     def __init__(ForwardPassRecord self,
                  INDEX_t num_samples, INDEX_t num_variables,
                  FLOAT_t penalty, FLOAT_t sst,
-                 list xlabels):
+                 list xlabels, FLOAT_t effective_num_samples=0):
         self.num_samples = num_samples
+        self.effective_num_samples = effective_num_samples
         self.num_variables = num_variables
         self.penalty = penalty
         self.sst = sst
@@ -140,11 +147,13 @@ cdef class ForwardPassRecord(Record):
     
     def __reduce__(ForwardPassRecord self):
         return (ForwardPassRecord, (self.num_samples, self.num_variables,
-                                    self.penalty, self.sst, self.xlabels),
+                                    self.penalty, self.sst, self.xlabels,
+                                    self.effective_num_samples),
                 self._getstate())
 
     def _getstate(ForwardPassRecord self):
         return {'num_samples': self.num_samples,
+                'effective_num_samples': self.effective_num_samples,
                 'num_variables': self.num_variables,
                 'penalty': self.penalty,
                 'sst': self.sst,
@@ -153,6 +162,7 @@ cdef class ForwardPassRecord(Record):
 
     def __setstate__(ForwardPassRecord self, dict state):
         self.num_samples = state['num_samples']
+        self.effective_num_samples = state.get('effective_num_samples', 0)
         self.num_variables = state['num_variables']
         self.penalty = state['penalty']
         self.sst = state['sst']

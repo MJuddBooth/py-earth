@@ -39,6 +39,7 @@ cdef class ForwardPasser:
     cdef cnp.ndarray sample_weight
     cdef cnp.ndarray output_weight
     cdef INDEX_t m
+    cdef FLOAT_t effective_m  # Effective sample size for GCV (sum of weights)
     cdef INDEX_t n
     cdef FLOAT_t sst
     cdef FLOAT_t y_squared

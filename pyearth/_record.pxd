@@ -5,6 +5,7 @@ from ._basis cimport Basis
 cdef class Record:
     cdef list iterations
     cdef int num_samples
+    cdef FLOAT_t effective_num_samples  # For GCV when using sample_weight; 0 means use num_samples
     cdef int num_variables
     cdef FLOAT_t penalty
     cdef FLOAT_t sst  # Sum of squares total

@@ -27,6 +27,8 @@ cdef class PruningPasser:
         self.n = self.X.shape[1]
         self.y = y
         self.sample_weight = sample_weight
+        # Effective sample size for GCV (sum of weights); equals m when weights are 1
+        self.effective_m = np.sum(self.sample_weight)
         self.verbose = verbose
         self.basis = basis
         self.B = np.empty(shape=(self.m, len(self.basis) + 1), dtype=np.float64)
@@ -108,7 +110,8 @@ cdef class PruningPasser:
         
         # Create the record object
         self.record = PruningPassRecord(
-            self.m, self.n, self.penalty, mse0 / total_weight, pruned_basis_size, mse / total_weight)
+            self.m, self.n, self.penalty, mse0 / total_weight, pruned_basis_size, mse / total_weight,
+            self.effective_m)
         gcv_ = self.record.gcv(0)
         best_gcv = gcv_
         best_iteration = 0
@@ -150,7 +153,7 @@ cdef class PruningPasser:
                         mse_ = np.sum((np.dot(B[:, 0:pruned_basis_size], beta) -
                                     weighted_y) ** 2) #/ np.sum(sample_weight)
                     mse += mse_# * output_weight[p]
-                gcv_ = gcv(mse / np.sum(sample_weight), pruned_basis_size, self.m, self.penalty)
+                gcv_ = gcv(mse / np.sum(sample_weight), pruned_basis_size, self.effective_m, self.penalty)
 
                 if gcv_ <= best_iteration_gcv or first:
                     best_iteration_gcv = gcv_

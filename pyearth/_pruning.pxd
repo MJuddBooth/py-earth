@@ -14,6 +14,7 @@ cdef class PruningPasser:
     cdef public dict feature_importance
     
     cdef INDEX_t m
+    cdef FLOAT_t effective_m  # Effective sample size for GCV (sum of weights)
     cdef INDEX_t n
     cdef Basis basis
     cdef FLOAT_t penalty
