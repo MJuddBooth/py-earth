@@ -48,12 +48,22 @@ default_params = {"penalty": 1}
 @if_sklearn_version_greater_than_or_equal_to('0.17.2')
 def test_check_estimator():
     numpy.random.seed(0)
+    import inspect
     import sklearn.utils.estimator_checks as checks
     if hasattr(checks, 'MULTI_OUTPUT'):
         checks.MULTI_OUTPUT.append('Earth')
     # sklearn 0.24+ requires an instance, not the class
     estimator = Earth() if sklearn.__version__ >= '0.24' else Earth
-    sklearn.utils.estimator_checks.check_estimator(estimator)
+    kwargs = {}
+    if 'expected_failed_checks' in inspect.signature(checks.check_estimator).parameters:
+        # sklearn >= 1.6: mark sample-weight equivalence as expected failure.
+        # MARS knot search sees 15 weighted rows vs N replicated rows; model selection can differ.
+        kwargs['expected_failed_checks'] = {
+            'check_sample_weight_equivalence_on_dense_data': (
+                'Weighted fit uses 15 rows, replicated fit uses sum(weights) rows; '
+                'This test was added after pyearth was released'),
+        }
+    checks.check_estimator(estimator, **kwargs)
 
 
 def test_get_params():

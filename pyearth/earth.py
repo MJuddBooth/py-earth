@@ -657,6 +657,9 @@ class Earth(RegressorMixin, TransformerMixin, BaseEstimator):
                                  "please re-enable pruning by setting enable_pruning to True in order"
                                  "to enable feature importance estimation")
 
+        if y is None:
+            raise ValueError("requires y to be passed, but the target y is None")
+
         self.linvars_ = linvars
         X, y, sample_weight, output_weight, missing = self._scrub(
             X, y, sample_weight, output_weight, missing)

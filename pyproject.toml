@@ -5,8 +5,12 @@ requires = [
     "numpy>=1.15,<1.20; python_version<'3.12'",
     "numpy>=1.15; python_version>='3.12' and python_version<'3.13'",
     "numpy>=2.0; python_version>='3.13'",
+    # SciPy headers (.pxd) are cimported by pyearth/_qr.pyx; must be present in the isolated build env.
+    "scipy>=0.16; python_version<'3.12'",
+    "scipy>=1.9; python_version>='3.12' and python_version<'3.13'",
+    "scipy>=1.14.0; python_version>='3.13'",
     "Cython>=0.29.21,<0.30; python_version<'3.13'",
-    "Cython>=3.0; python_version>='3.13'", 
+    "Cython>=3.0; python_version>='3.13'",
     "versioneer>=0.29",
 ]
 build-backend = "setuptools.build_meta"

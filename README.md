@@ -27,13 +27,23 @@ If there are other features or improvements you'd like to see in py-earth, pleas
 pip install sklearn-contrib-py-earth
 ```
 
-#### Manual install
-Make sure you have numpy and scikit-learn installed. Then do the following:
-```
-git clone git://github.com/scikit-learn-contrib/py-earth.git
+#### Manual install (from source)
+
+Extensions are built from **Cython** (`.pyx`) at install time; you need a C compiler. Build dependencies (setuptools, wheel, **NumPy**, **SciPy** — needed for `scipy.linalg` Cython headers used by `pyearth/_qr.pyx` — **Cython**, versioneer) are listed in **`pyproject.toml`** under **`[build-system] requires`** and are installed automatically when you use **pip** (build isolation).
+
+```bash
+git clone https://github.com/scikit-learn-contrib/py-earth.git
 cd py-earth
-sudo python setup.py install
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e .
 ```
+
+For a non-editable install, use `pip install .` instead of `pip install -e .`.
+
+To build in place without installing (development): `pip install numpy scipy Cython` then `python setup.py build_ext --inplace`, then add the repo root to `PYTHONPATH` or use `pip install -e .`.
+
+More detail (Python 3.12/3.13, pinned stacks): see **`TESTING.md`**.
 
 ## Usage
 ```python

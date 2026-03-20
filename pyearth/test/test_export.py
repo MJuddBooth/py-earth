@@ -71,12 +71,23 @@ def test_export_sympy():
         def _print_Missing(self, expr):
             return 'isnan(' + ','.join(self._print(a) for a in expr.args) + ').astype(float)'
 
+        def _print_AppliedUndef(self, expr):
+            # Printer MRO strips concrete UndefinedFunction (e.g. Missing) and starts at
+            # AppliedUndef, so we dispatch by name to our _print_* methods.
+            name = expr.func.__name__
+            if name == 'Missing':
+                return self._print_Missing(expr)
+            if name == 'NaNProtect':
+                return self._print_NaNProtect(expr)
+            return self._print_Function(expr)
+
     for smooth, n_cols, allow_missing in product((True, False), (1, 2), (True, False)):
         X_df = pd.DataFrame(X.copy(), columns=['x_%d' % i for i in range(X.shape[1])])
         y_df = pd.DataFrame(Y[:, :n_cols])
         if allow_missing:
             # Randomly remove some values so that the fitted model contains MissingnessBasisFunctions
-            X_df['x_1'][numpy.random.binomial(n=1, p=.1, size=X_df.shape[0]).astype(bool)] = numpy.nan
+            mask = numpy.random.binomial(n=1, p=.1, size=X_df.shape[0]).astype(bool)
+            X_df.loc[mask, 'x_1'] = numpy.nan
 
         model = Earth(allow_missing=allow_missing, smooth=smooth, max_degree=2).fit(X_df, y_df)
         expressions = export_sympy(model) if n_cols > 1 else [export_sympy(model)]
