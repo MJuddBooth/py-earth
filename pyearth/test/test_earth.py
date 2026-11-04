@@ -7,7 +7,7 @@ import pickle
 import copy
 import os
 from pyearth.test.testing_utils import (if_statsmodels, if_pandas, if_patsy,
-                            if_environ_has, assert_list_almost_equal_value,
+                            assert_list_almost_equal_value,
                             assert_list_almost_equal,
                             if_sklearn_version_greater_than_or_equal_to,
                             if_platform_not_win_32)
@@ -249,7 +249,6 @@ def test_score():
 
 
 @if_pandas
-@if_environ_has('test_pathological_cases')
 def test_pathological_cases():
     import pandas as pd
 
@@ -278,7 +277,10 @@ def test_pathological_cases():
         },
     }
     for case, settings in cases.items():
-        data = pd.read_csv(os.path.join(directory, case + ".csv"), index_col=0)
+        # issue_195 CSV has a leading index column (row numbers). issue_44 / issue_50
+        # use "x" as the first *feature* column; index_col=0 would wrongly make X empty.
+        csv_kw = dict(index_col=0) if case == "issue_195" else {}
+        data = pd.read_csv(os.path.join(directory, case + ".csv"), **csv_kw)
         y = data["y"]
         X = data.drop("y", axis=1)
         if "sample_weight" in settings:

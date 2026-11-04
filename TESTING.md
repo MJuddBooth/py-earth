@@ -41,16 +41,16 @@ For Python 3.13 you need NumPy 2.x, SciPy ≥ 1.14 (for Cython `.pxd` imports in
 ### 3. Run the test suite
 
 ```bash
-.venv-py313/bin/nosetests -sv pyearth
+.venv-py313/bin/pynose -sv pyearth
 ```
 
 Or with the Makefile (set `PYTHON` and `NOSETESTS` to the venv binaries):
 
 ```bash
-make verbose-test PYTHON=.venv-py313/bin/python NOSETESTS=.venv-py313/bin/nosetests
+make verbose-test PYTHON=.venv-py313/bin/python NOSETESTS=.venv-py313/bin/pynose
 ```
 
-You may see one skipped test (e.g. pathological cases) and one check in `test_check_estimator` reported as an expected failure (sample-weight equivalence on dense data); the run still completes successfully.
+You may see one check in `test_check_estimator` reported as an expected failure (sample-weight equivalence on dense data).  This is a consequence of newer versions of sklearn testing with sample weights beyond 0 and 1, which pyearth was not built to expect.  Fixing this would require some thinking about intent.  Regression cases in `test_pathological_cases` (under `pyearth/test/pathological_data/`) run when **pandas** is installed.
 
 ## Quick test (any supported Python)
 
